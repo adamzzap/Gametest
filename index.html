@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Bajans vs Tourists</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{--u:8px}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#000;color:#fff;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;font-family:'Press Start 2P','Courier New',ui-monospace,monospace}
+  #app{display:flex;flex-direction:column;height:100%;align-items:center;justify-content:center}
+  #stage{position:relative;width:min(100vw,calc((100dvh - 80px) * 16 / 9));aspect-ratio:16/9;background:#000;overflow:hidden}
+  canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;image-rendering:pixelated}
+  .ov{position:absolute;inset:0;pointer-events:none}
+  .t{text-shadow:calc(var(--u)*.3) calc(var(--u)*.3) 0 #000}
+  #banner,#menu h1,#end h2,#tm{text-shadow:calc(var(--u)*.6) calc(var(--u)*.6) 0 #000}
+  #hud{display:none}
+  #hud .side{position:absolute;top:calc(var(--u)*1.6);width:calc(var(--u)*38)}
+  #hud .l{left:calc(var(--u)*2)} #hud .r{right:calc(var(--u)*2);text-align:right}
+  .nm{font-size:calc(var(--u)*1.55);white-space:nowrap;overflow:hidden;margin-bottom:calc(var(--u)*.7)}
+  .bar{position:relative;height:calc(var(--u)*3);background:#1b0f0f;border:calc(var(--u)*.4) solid #fff;box-shadow:0 0 0 calc(var(--u)*.3) #000}
+  .bar i,.bar b{position:absolute;top:0;bottom:0}
+  .bar i{background:#ff2a2a;width:100%}
+  .bar b{background:linear-gradient(#ffe95a 0 50%,#f2b705 50% 100%);width:100%}
+  .l .bar i,.l .bar b{left:0} .r .bar i,.r .bar b{right:0}
+  .pips{margin-top:calc(var(--u)*1)}
+  .pips s{display:inline-block;width:calc(var(--u)*1.7);height:calc(var(--u)*1.7);margin:0 calc(var(--u)*.5);background:#222;border:calc(var(--u)*.3) solid #fff;text-decoration:none}
+  .pips s.on{background:#ffe14d}
+  #hud .mid{position:absolute;left:50%;top:calc(var(--u)*1.2);transform:translateX(-50%);text-align:center}
+  #tm{font-size:calc(var(--u)*4.4);color:#ffe14d}
+  #oppn{font-size:calc(var(--u)*1.2);margin-top:calc(var(--u)*.4);color:#fff}
+  #banner{position:absolute;left:0;right:0;top:34%;text-align:center;font-size:calc(var(--u)*8);color:#ffe14d;pointer-events:none;opacity:0}
+  #banner small{display:block;font-size:calc(var(--u)*2);color:#fff;margin-top:calc(var(--u)*1.5)}
+  #banner.go{animation:slam 1.2s steps(12) forwards}
+  @keyframes slam{0%{transform:scale(3);opacity:0}15%{transform:scale(1);opacity:1}80%{opacity:1}100%{opacity:0;transform:scale(1)}}
+  #banner.hold{animation:slamhold .5s steps(6) forwards}
+  @keyframes slamhold{0%{transform:scale(2);opacity:0}100%{transform:scale(1);opacity:1}}
+  .pop{position:absolute;transform:translate(-50%,-50%);font-size:calc(var(--u)*1.9);white-space:nowrap;animation:pop .9s steps(9) forwards}
+  @keyframes pop{0%{margin-top:0;opacity:1}100%{margin-top:calc(var(--u)*-6);opacity:0}}
+  #menu{display:none}
+  #menu h1{margin:0;position:absolute;left:0;right:0;top:calc(var(--u)*3);text-align:center;font-weight:normal;font-size:calc(var(--u)*5.2);color:#ffe14d;line-height:1.1}
+  #menu h1 span{display:block;font-size:calc(var(--u)*1.5);color:#fff;margin-top:calc(var(--u)*1.6)}
+  .pick{position:absolute;bottom:calc(var(--u)*3.5);width:calc(var(--u)*34);text-align:center;opacity:.7}
+  .pick.sel{opacity:1}
+  .pick b{display:block;font-weight:normal;font-size:calc(var(--u)*2.4);color:#fff}
+  .pick.sel b{color:#ffe14d}
+  .pick small{display:block;margin-top:calc(var(--u)*1);font-size:calc(var(--u)*1.05);color:#9fe8ff;line-height:1.5}
+  #pk0{left:calc(var(--u)*8)} #pk1{right:calc(var(--u)*8)}
+  #menu .tap{position:absolute;left:0;right:0;bottom:calc(var(--u)*.8);text-align:center;font-size:calc(var(--u)*1.1);color:#fff;animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:0}}
+  #end{display:none;background:rgba(0,0,20,.55);text-align:center}
+  #end h2{margin:calc(var(--u)*13) 0 0;font-weight:normal;font-size:calc(var(--u)*5.6);color:#ffe14d}
+  #end.lose h2{color:#ff5a5a}
+  #end p{font-size:calc(var(--u)*1.6);line-height:1.6;margin:calc(var(--u)*3) calc(var(--u)*6) 0}
+  #end .tap{position:absolute;left:0;right:0;bottom:calc(var(--u)*4);font-size:calc(var(--u)*1.8);animation:blink 1s steps(2) infinite}
+  #hint{font-size:10px;opacity:.6;margin-top:10px;text-align:center;padding:0 10px;line-height:1.6}
+  #pad{display:none;position:fixed;left:0;right:0;bottom:calc(8px + env(safe-area-inset-bottom));justify-content:space-between;padding:0 10px;pointer-events:none}
+  #pad .g{display:flex;flex-wrap:wrap;max-width:140px;justify-content:center}
+  #pad button{pointer-events:auto;width:60px;height:60px;margin:3px;border-radius:12px;border:3px solid rgba(255,255,255,.55);background:rgba(10,20,30,.55);color:#fff;font-size:22px;touch-action:none;font-family:inherit}
+  #pad button.on{background:rgba(255,255,255,.45)}
+  #rot{display:none;font-size:9px;line-height:1.7;text-align:center;opacity:.75;margin-top:14px;padding:0 16px;color:#ffe14d}
+  @media (pointer:coarse){#pad{display:flex}#hint{display:none}}
+  @media (pointer:coarse) and (orientation:portrait){#app{justify-content:flex-start;padding-top:calc(env(safe-area-inset-top) + 24px)}#rot{display:block}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <canvas id="c"></canvas>
+    <div id="pops" class="ov"></div>
+    <div id="hud" class="ov t">
+      <div class="side l"><div class="nm" id="n1"></div><div class="bar"><i id="t1"></i><b id="h1"></b></div><div class="pips" id="p1"><s></s><s></s></div></div>
+      <div class="mid"><div id="tm">60</div><div id="oppn"></div></div>
+      <div class="side r"><div class="nm" id="n2"></div><div class="bar"><i id="t2"></i><b id="h2"></b></div><div class="pips" id="p2"><s></s><s></s></div></div>
+    </div>
+    <div id="banner" class="t"></div>
+    <div id="menu" class="ov t">
+      <h1>BAJANS<br>vs TOURISTS<span>DEFEND THE ISLAND. MIND THE SUNBURN.</span></h1>
+      <div class="pick" id="pk0"><b>ISLAND QUEEN</b><small>GLAM. FEARLESS.<br>UNBOTHERED.</small></div>
+      <div class="pick" id="pk1"><b>BAJAN DON</b><small>SMOOTH. GOLD CHAINS.<br>COLD.</small></div>
+      <div class="tap">TAP A FIGHTER · OR ←/→ + ENTER</div>
+    </div>
+    <div id="end" class="ov t"><h2 id="endh"></h2><p id="endp"></p><div class="tap">TAP OR PRESS ENTER</div></div>
+  </div>
+  <div id="rot">TIP: TURN YOUR PHONE SIDEWAYS FOR A BIGGER SCREEN</div>
+  <div id="hint">A/D or ←/→ move · W/↑/Space jump · S/↓ block · J punch · K kick · L special · M mute</div>
+</div>
+<div id="pad">
+  <div class="g"><button data-a="left">◀</button><button data-a="right">▶</button><button data-a="jump">▲</button><button data-a="block">▼</button></div>
+  <div class="g"><button data-a="punch">P</button><button data-a="kick">K</button><button data-a="special">★</button></div>
+</div>
+<script type="importmap">{"imports":{"three":"./three.module.min.js"}}</script>
+<script type="module" src="./game.js"></script>
+</body>
+</html>
